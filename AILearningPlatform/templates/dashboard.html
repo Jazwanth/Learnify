@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <h1 class="mb-4">Welcome, {{ user.username }}!</h1>
+            
+            <!-- Streak Counter -->
+            <div class="dashboard-streak mb-4">
+                <h5>Learning Streak</h5>
+                <div class="streak-count pulse">{{ streak.current_streak }}</div>
+                <p class="mb-0">{{ "Start your learning streak today!" if streak.current_streak == 0 else "Day" + ("s" if streak.current_streak != 1 else "") + " in a row" }}</p>
+                <div class="mt-2 small">Longest streak: {{ streak.max_streak }} days</div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="dashboard-stats mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <i class="fas fa-book text-primary"></i>
+                            <h3>{{ courses|length }}</h3>
+                            <p class="mb-0">Enrolled Courses</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <i class="fas fa-medal text-warning"></i>
+                            <h3>{{ achievements|length }}</h3>
+                            <p class="mb-0">Achievements</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <i class="fas fa-chart-line text-info"></i>
+                            <h3>{{ courses|selectattr('progress', 'defined')|selectattr('progress', 'ge', 100)|list|length }}</h3>
+                            <p class="mb-0">Completed Courses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Chart -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">Your Course Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 250px;">
+                        <canvas id="courseProgressChart" 
+                                data-titles="{{ courses|map(attribute='title')|list|tojson }}" 
+                                data-progress="{{ courses|map(attribute='progress', default=0)|list|tojson }}">
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enrolled Courses -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Courses</h5>
+                    <a href="/courses" class="btn btn-sm btn-outline-primary">Explore More</a>
+                </div>
+                <div class="card-body">
+                    {% if courses %}
+                        <div class="row g-3">
+                            {% for course in courses %}
+                                <div class="col-md-6">
+                                    <div class="card h-100 course-card">
+                                        <img src="{{ course.image_url }}" class="card-img-top course-image" alt="{{ course.title }}">
+                                        <div class="card-body">
+                                            <span class="badge bg-{{ 'info' if course.level == 'Beginner' else 'warning' if course.level == 'Intermediate' else 'danger' }}">{{ course.level }}</span>
+                                            <h5 class="card-title mt-2">{{ course.title }}</h5>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                     role="progressbar" 
+                                                     style="width: 0%"
+                                                     data-progress="{{ course.progress|default(0) }}" 
+                                                     aria-valuenow="{{ course.progress|default(0) }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ course.progress|default(0) }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">{{ course.duration }}</small>
+                                            <a href="/course/{{ course.id }}" class="btn btn-sm btn-primary">Continue</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book text-muted fa-3x mb-3"></i>
+                            <h5>You haven't enrolled in any courses yet</h5>
+                            <p class="text-muted">Explore our course catalog and start learning</p>
+                            <a href="/courses" class="btn btn-primary">Browse Courses</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Recommended Courses -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">Recommended for You</h5>
+                </div>
+                <div class="card-body">
+                    {% if recommended_courses %}
+                        {% for course in recommended_courses %}
+                            <div class="card mb-3 course-card">
+                                <div class="row g-0">
+                                    <div class="col-4">
+                                        <img src="{{ course.image_url }}" class="img-fluid rounded-start h-100" style="object-fit: cover;" alt="{{ course.title }}">
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ course.title }}</h6>
+                                            <p class="card-text small">{{ course.level }} • {{ course.duration }}</p>
+                                            <a href="/course/{{ course.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No recommendations available</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Weekly Activity -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">Weekly Activity</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyActivityChart" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Achievements -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Achievements</h5>
+                    <a href="/profile" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if achievements %}
+                        <div class="row g-2 badge-container">
+                            {% for achievement in achievements[:6] %}
+                                <div class="col-4 text-center">
+                                    <div class="badge-tooltip">
+                                        <div class="achievement-badge {{ 'gold' if loop.index <= 2 else 'silver' if loop.index <= 4 else 'bronze' }}">
+                                            {% if achievement.id.startswith('streak') %}
+                                                <i class="fas fa-fire"></i>
+                                            {% elif achievement.id.startswith('quiz') %}
+                                                <i class="fas fa-award"></i>
+                                            {% elif achievement.id.startswith('course') %}
+                                                <i class="fas fa-graduation-cap"></i>
+                                            {% elif achievement.id.startswith('complete') %}
+                                                <i class="fas fa-certificate"></i>
+                                            {% elif achievement.id.startswith('first') %}
+                                                <i class="fas fa-flag"></i>
+                                            {% else %}
+                                                <i class="fas fa-medal"></i>
+                                            {% endif %}
+                                            <span>{{ achievement.title }}</span>
+                                        </div>
+                                        <div class="tooltip-text">
+                                            {{ achievement.title }}<br>
+                                            <small>Earned: {{ achievement.earned_at.split()[0] }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Achievement Progress Chart -->
+                        <div class="mt-4 text-center">
+                            <canvas id="achievementProgressChart" height="150" 
+                                    data-earned="{{ achievements|length }}" 
+                                    data-total="10">
+                            </canvas>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-medal text-muted fa-3x mb-3"></i>
+                            <h6>No achievements yet</h6>
+                            <p class="text-muted small">Complete courses and quizzes to earn badges</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update progress bars
+    document.querySelectorAll('[data-progress]').forEach(progressBar => {
+        const progress = progressBar.getAttribute('data-progress');
+        progressBar.style.width = progress + '%';
+    });
+});
+</script>
+{% endblock %}

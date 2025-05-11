@@ -1,0 +1,136 @@
+{% extends "auth/base_auth.html" %}
+
+{% block title %}Create Account - Learnify{% endblock %}
+
+{% block content %}
+    <h1 class="auth-title text-center">Create Account</h1>
+    <p class="auth-subtitle">Fill in your details to get started</p>
+    
+    <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="mb-3">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="username" name="username" 
+                       placeholder="Username" required minlength="3" maxlength="50"
+                       pattern="[A-Za-z0-9_]{3,50}" title="Username can only contain letters, numbers, and underscores">
+                <label for="username">Username</label>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-floating">
+                <input type="email" class="form-control" id="email" name="email" 
+                       placeholder="name@example.com" required>
+                <label for="email">Email address</label>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-floating">
+                <input type="password" class="form-control" id="password" name="password" 
+                       placeholder="Password" required minlength="8"
+                       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                       title="Must contain at least one number, one uppercase and lowercase letter, and be at least 8 characters long">
+                <label for="password">Password</label>
+            </div>
+            <div class="form-text">
+                Password must be at least 8 characters long and include uppercase, lowercase, and numbers.
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <div class="form-floating">
+                <input type="password" class="form-control" id="confirm_password" 
+                       name="confirm_password" placeholder="Confirm Password" required>
+                <label for="confirm_password">Confirm Password</label>
+            </div>
+        </div>
+        
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+            <label class="form-check-label" for="terms">
+                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> 
+                and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+            Create Account
+        </button>
+        
+        <div class="text-center">
+            <p class="mb-0">Already have an account? 
+                <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                    Sign in
+                </a>
+            </p>
+        </div>
+    </form>
+    
+    <!-- Terms and Privacy Modals -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms of Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Acceptance of Terms</h6>
+                    <p>By accessing or using Learnify, you agree to be bound by these Terms of Service.</p>
+                    
+                    <h6>2. User Accounts</h6>
+                    <p>You are responsible for maintaining the confidentiality of your account and password.</p>
+                    
+                    <h6>3. User Conduct</h6>
+                    <p>You agree not to use the service for any unlawful purpose or in any way that could damage the service.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Information We Collect</h6>
+                    <p>We collect information that you provide when you register, enroll in courses, or communicate with us.</p>
+                    
+                    <h6>2. How We Use Your Information</h6>
+                    <p>We use your information to provide and improve our services, process transactions, and send you related information.</p>
+                    
+                    <h6>3. Data Security</h6>
+                    <p>We implement security measures to protect your personal information.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side password match validation
+    const password = document.getElementById("password");
+    const confirm_password = document.getElementById("confirm_password");
+    
+    function validatePassword() {
+        if (password.value !== confirm_password.value) {
+            confirm_password.setCustomValidity("Passwords don't match");
+        } else {
+            confirm_password.setCustomValidity('');
+        }
+    }
+    
+    password.onchange = validatePassword;
+    confirm_password.onkeyup = validatePassword;
+</script>
+{% endblock %}

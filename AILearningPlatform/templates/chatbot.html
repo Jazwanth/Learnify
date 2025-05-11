@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - AI Learning Assistant{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="fas fa-robot text-primary me-2"></i> AI Learning Assistant</h2>
+                    <div class="badge bg-success px-3 py-2">
+                        <i class="fas fa-circle small me-1"></i> Online
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Ask any course-related questions and get instant help with concepts, exercises, 
+                        and learning resources. The AI is trained on course materials and can provide 
+                        personalized assistance.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label for="course-context" class="form-label">Course Context (Optional)</label>
+                        <select id="course-context" class="form-select">
+                            <option value="">General Questions</option>
+                            {% for course in enrolled_courses %}
+                            <option value="{{ course }}"{% if request.args.get('course') == course %} selected{% endif %}>{{ course }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select a course to make the AI aware of specific course content</div>
+                    </div>
+                    
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            {% if chat_history %}
+                                {% for message in chat_history %}
+                                    <div class="message {{ 'user-message' if message.is_user else 'bot-message' }}">
+                                        <div class="message-content">{{ message.message }}</div>
+                                        <div class="message-time">{{ message.timestamp }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="message bot-message fade-in">
+                                    <div class="message-content">
+                                        Hello, I'm your AI learning assistant! I can help you with course-related questions,
+                                        clarify concepts, provide learning tips, and suggest resources. What can I help you with today?
+                                    </div>
+                                    <div class="message-time">just now</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <form id="chat-form" class="chat-input">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Type your question here..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Tips -->
+            <div class="card bg-dark border-0 shadow">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0">Tips for Effective Learning with AI</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card bg-dark">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-lightbulb text-warning me-2"></i> Be Specific</h5>
+                                    <p class="small mb-0">Ask clear, focused questions about particular concepts or problems you're facing.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-dark">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-puzzle-piece text-info me-2"></i> Request Examples</h5>
+                                    <p class="small mb-0">Ask for examples or analogies to help understand complex topics.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-dark">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-book-open text-success me-2"></i> Follow Up</h5>
+                                    <p class="small mb-0">Don't hesitate to ask follow-up questions if you need further clarification.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-dark">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-code text-danger me-2"></i> Code Help</h5>
+                                    <p class="small mb-0">Share code snippets and error messages for programming assistance.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% endblock %}

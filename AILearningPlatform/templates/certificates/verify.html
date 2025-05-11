@@ -1,0 +1,193 @@
+{% extends "certificates/base_certificate.html" %}
+
+{% block title %}Verify Certificate - Learnify{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-white py-3">
+                <h2 class="h4 mb-0 text-center">
+                    <i class="fas fa-certificate me-2 text-primary"></i>
+                    Certificate Verification
+                </h2>
+            </div>
+            <div class="card-body p-4">
+                {% if certificate %}
+                    <!-- Certificate Found -->
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle fa-5x text-success"></i>
+                        </div>
+                        <h3 class="mb-3">Certificate Verified</h3>
+                        <p class="text-muted">This certificate has been successfully verified and is valid.</p>
+                    </div>
+                    
+                    <!-- Certificate Details -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-uppercase text-muted mb-2">Recipient</h6>
+                                    <p class="h5 mb-0">{{ certificate.user.username }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-uppercase text-muted mb-2">Course</h6>
+                                    <p class="h5 mb-0">{{ certificate.course.title }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-uppercase text-muted mb-2">Issued On</h6>
+                                    <p class="mb-0">{{ certificate.issue_date.strftime('%B %d, %Y') }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-uppercase text-muted mb-2">Score</h6>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2 progress-thin">
+                                            <div class="progress-bar bg-success" 
+                                                 role="progressbar" 
+                                                 data-width="{{ certificate.score }}"
+                                                 aria-valuenow="{{ certificate.score }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <span class="fw-bold">{{ "%.2f"|format(certificate.score) }}%</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <h6 class="text-uppercase text-muted mb-2">Verification Code</h6>
+                                    <div class="p-3 bg-light rounded">
+                                        <code class="h5">{{ certificate.verification_code }}</code>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                                onclick="copyToClipboard('{{ certificate.verification_code }}')">
+                                            <i class="far fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        Use this code to verify this certificate at any time.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('certificate.download_certificate', certificate_id=certificate.id) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-download me-1"></i> Download Certificate
+                        </a>
+                        <button class="btn btn-outline-secondary" 
+                                onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                    </div>
+                    
+                {% else %}
+                    <!-- Verification Form -->
+                    <div class="text-center py-4">
+                        <div class="mb-4">
+                            <i class="fas fa-search fa-4x text-primary mb-3"></i>
+                            <h3>Verify a Certificate</h3>
+                            <p class="text-muted">Enter the verification code to validate a certificate</p>
+                        </div>
+                        
+                        <form method="GET" class="mb-4">
+                            <div class="input-group input-group-lg mb-3">
+                                <input type="text" 
+                                       name="code" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Enter verification code" 
+                                       value="{{ request.args.get('code', '') }}"
+                                       required>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-check me-1"></i> Verify
+                                </button>
+                            </div>
+                            {% if error %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+                                </div>
+                            {% endif %}
+                        </form>
+                        
+                        <div class="alert alert-info text-start">
+                            <h5><i class="fas fa-info-circle me-2"></i> How to verify a certificate</h5>
+                            <ol class="mb-0">
+                                <li>Locate the verification code on the certificate (usually at the bottom)</li>
+                                <li>Enter the code in the field above and click "Verify"</li>
+                                <li>View the certificate details and verify its authenticity</li>
+                            </ol>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-light text-center py-3">
+                <small class="text-muted">
+                    <i class="fas fa-lock me-1"></i> 
+                    This verification is powered by Learnify's secure certificate validation system.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show tooltip or notification
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update progress bars
+        document.querySelectorAll('[data-width]').forEach(progressBar => {
+            const width = progressBar.getAttribute('data-width');
+            progressBar.style.width = width + '%';
+        });
+
+        // Focus the input field if it exists
+        const codeInput = document.querySelector('input[name="code"]');
+        if (codeInput) {
+            codeInput.focus();
+        }
+    });
+</script>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .card, .card * {
+            visibility: visible;
+        }
+        .card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none;
+            box-shadow: none !important;
+        }
+        .card-header, .card-footer, .btn, .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ course.title }} - Quiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>{{ course.title }} - Quiz</h2>
+            <p class="text-muted">Complete the quiz to test your knowledge. You need to score 70% or higher to pass.</p>
+            
+            <form method="POST" action="{{ url_for('routes.take_quiz', course_id=course.id) }}" class="mt-4" id="quizForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                {% for question in questions %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Question {{ loop.index }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ question.question }}</p>
+                        <div class="form-group">
+                            {% for option in question.options %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" 
+                                       name="question_{{ question.id }}" 
+                                       id="question_{{ question.id }}_{{ loop.index }}" 
+                                       value="{{ option }}" 
+                                       required
+                                       {% if loop.first %}checked{% endif %}>
+                                <label class="form-check-label" for="question_{{ question.id }}_{{ loop.index }}">
+                                    {{ option }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('routes.course_details', course_id=course.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Course
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitQuiz">
+                        <i class="fas fa-paper-plane"></i> Submit Quiz
+                    </button>
+                </div>
+            </form>
+            
+            <script>
+            document.getElementById('quizForm').addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('submitQuiz');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            });
+            </script>
+        </div>
+    </div>
+</div>
+{% endblock %}

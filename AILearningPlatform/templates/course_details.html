@@ -1,0 +1,437 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Course Header -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <img src="{{ url_for('static', filename=course.image_url) }}" class="card-img-top" alt="{{ course.title }}" style="height: 300px; object-fit: cover;">
+                <div class="card-body">
+                    <span class="badge bg-{{ 'info' if course.level == 'Beginner' else 'warning' if course.level == 'Intermediate' else 'danger' }}">{{ course.level }}</span>
+                    <h1 class="card-title mt-2">{{ course.title }}</h1>
+                    <p class="card-text">{{ course.description }}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-tie text-primary me-2 fa-2x"></i>
+                                <div>
+                                    <small class="text-muted d-block">Instructor</small>
+                                    <span>{{ course.instructor }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-primary me-2 fa-2x"></i>
+                                <div>
+                                    <small class="text-muted d-block">Duration</small>
+                                    <span>{{ course.duration }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chart-line text-primary me-2 fa-2x"></i>
+                                <div>
+                                    <small class="text-muted d-block">Level</small>
+                                    <span>{{ course.level }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if enrolled %}
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check-circle me-2"></i> You are enrolled in this course
+                        </div>
+                        <div class="progress mt-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 style="width: 0%;" 
+                                 data-progress="{{ progress }}"
+                                 aria-valuenow="{{ progress }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100"
+                                 id="course-progress-bar">
+                                {{ progress }}%
+                            </div>
+                        </div>
+                    {% else %}
+                        {% if current_user.is_authenticated %}
+                            <a href="/enroll/{{ course.id }}" class="btn btn-primary btn-lg mt-3 enroll-button">
+                                <i class="fas fa-user-plus me-2"></i> Enroll Now
+                            </a>
+                        {% else %}
+                            <a href="/login" class="btn btn-primary btn-lg mt-3">
+                                <i class="fas fa-sign-in-alt me-2"></i> Log In to Enroll
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if enrolled %}
+                <!-- Course Content -->
+                <div class="card bg-dark border-0 shadow">
+                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Course Content</h3>
+                        {% if enrolled %}
+                        <a href="{{ url_for('routes.take_quiz', course_id=course.id) }}" class="btn btn-primary">
+                            <i class="fas fa-question-circle me-2"></i>Take Final Quiz
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Module List -->
+                            <div class="col-md-4">
+                                <h5 class="mb-3">Modules</h5>
+                                <ul class="module-list">
+                                    {% for module in course.modules %}
+                                        <li class="module-item{% if loop.first %} active{% endif %}" 
+                                            data-module-id="{{ module.id }}"
+                                            data-course-id="{{ course.id }}"
+                                            data-title="{{ module.title }}"
+                                            data-content="{{ module.content }}"
+                                            data-video="{{ module.video_url }}"
+                                            data-quiz="{{ module.quiz|tojson }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>{{ loop.index }}. {{ module.title }}</span>
+                                                <i class="fas fa-chevron-right"></i>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <!-- Module Content -->
+                            <div class="col-md-8">
+                                <div id="module-content" class="module-content">
+                                    <div id="video-container" class="video-container mb-4"></div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h3 id="module-title" class="mb-0"></h3>
+                                        <button id="start-quiz-btn" class="btn btn-primary" style="display: none;">
+                                            <i class="fas fa-question-circle me-2"></i>Take Quiz
+                                        </button>
+                                    </div>
+                                    <p id="module-text" class="mb-4"></p>
+                                    
+                                    <div id="quiz-container" class="quiz-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Course Preview -->
+                <div class="card bg-dark border-0 shadow">
+                    <div class="card-header bg-transparent border-0">
+                        <h3 class="mb-0">Course Preview</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Enroll in this course to access all modules and materials.
+                        </div>
+                        
+                        <h4 class="mt-4">What You'll Learn</h4>
+                        <ul class="list-group list-group-flush bg-transparent mb-4">
+                            {% for module in course.modules %}
+                                <li class="list-group-item bg-transparent">
+                                    <i class="fas fa-check-circle text-success me-2"></i> {{ module.title }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        {% if current_user.is_authenticated %}
+                            <a href="/enroll/{{ course.id }}" class="btn btn-primary enroll-button">
+                                <i class="fas fa-user-plus me-2"></i> Enroll Now
+                            </a>
+                        {% else %}
+                            <a href="/login" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> Log In to Enroll
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Course Stats -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0">Course Features</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-book text-primary me-2"></i> Modules
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ course.modules|length }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-question-circle text-primary me-2"></i> Quizzes
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ course.modules|selectattr('quiz', 'defined')|list|count }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-certificate text-primary me-2"></i> Certificate
+                            </div>
+                            <span class="badge bg-success rounded-pill">Yes</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-comments text-primary me-2"></i> AI Support
+                            </div>
+                            <span class="badge bg-success rounded-pill">Yes</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- AI Chat Support -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0">AI Learning Assistant</h4>
+                </div>
+                <div class="card-body">
+                    <p>Have questions about this course?</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="/chatbot?course={{ course.id }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-robot me-2"></i> Chat with AI Assistant
+                        </a>
+                    {% else %}
+                        <a href="/login" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i> Log In to Access AI Support
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Other Courses -->
+            <div class="card bg-dark border-0 shadow">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0">Related Courses</h4>
+                </div>
+                <div class="card-body">
+                    {% set related_courses = [] %}
+                    {% for c in courses if c.id != course.id and c.level == course.level %}
+                        {% if related_courses|length < 2 %}
+                            {% set _ = related_courses.append(c) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if related_courses %}
+                        {% for related in related_courses %}
+                            <div class="card mb-3 course-card">
+                                <div class="row g-0">
+                                    <div class="col-4">
+                                        <img src="{{ url_for('static', filename=related.image_url) }}" class="img-fluid rounded-start h-100" style="object-fit: cover;" alt="{{ related.title }}">
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ related.title }}</h6>
+                                            <p class="card-text small">{{ related.level }} • {{ related.duration }}</p>
+                                            <a href="/course/{{ related.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No related courses found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all module items
+    const moduleItems = document.querySelectorAll('.module-item');
+    const moduleTitle = document.getElementById('module-title');
+    const moduleText = document.getElementById('module-text');
+    const videoContainer = document.getElementById('video-container');
+    const quizContainer = document.getElementById('quiz-container');
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    
+    // Store current module data
+    let currentModule = null;
+    
+    // Handle module item click
+    moduleItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Update active state
+            moduleItems.forEach(mi => mi.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Get module data
+            const moduleData = {
+                id: this.dataset.moduleId,
+                title: this.dataset.title,
+                content: this.dataset.content,
+                video: this.dataset.video,
+                quiz: JSON.parse(this.dataset.quiz || 'null')
+            };
+            
+            currentModule = moduleData;
+            
+            // Update UI
+            updateModuleContent(moduleData);
+        });
+    });
+    
+    // Update module content
+    function updateModuleContent(module) {
+        // Update title and text
+        moduleTitle.textContent = module.title;
+        moduleText.textContent = module.content;
+        
+        // Update video if exists
+        if (module.video) {
+            videoContainer.innerHTML = `
+                <div class="ratio ratio-16x9">
+                    <iframe src="${module.video}" 
+                            title="${module.title}" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            videoContainer.style.display = 'block';
+        } else {
+            videoContainer.style.display = 'none';
+            videoContainer.innerHTML = '';
+        }
+        
+        // Show/hide quiz button
+        if (module.quiz) {
+            startQuizBtn.style.display = 'block';
+            // Reset quiz container
+            quizContainer.style.display = 'none';
+            quizContainer.innerHTML = '';
+        } else {
+            startQuizBtn.style.display = 'none';
+            quizContainer.style.display = 'none';
+            quizContainer.innerHTML = '';
+        }
+    }
+    
+    // Handle quiz button click
+    startQuizBtn.addEventListener('click', function() {
+        if (!currentModule || !currentModule.quiz) return;
+        
+        // Hide the start quiz button
+        this.style.display = 'none';
+        
+        // Show the quiz container
+        quizContainer.style.display = 'block';
+        
+        // Render the quiz
+        renderQuiz(currentModule.quiz);
+    });
+    
+    // Render quiz
+    function renderQuiz(quiz) {
+        if (!quiz) return;
+        
+        // Create quiz HTML
+        let quizHTML = `
+            <div class="card bg-dark border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">${quiz.question}</h5>
+                </div>
+                <div class="card-body">
+                    <form id="quiz-form">
+                        <div class="mb-3">
+                            ${quiz.options.map((option, index) => `
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="quiz-answer" id="option-${index}" value="${option}">
+                                    <label class="form-check-label" for="option-${index}">
+                                        ${option}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Answer</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        quizContainer.innerHTML = quizHTML;
+        
+        // Handle quiz submission
+        const quizForm = document.getElementById('quiz-form');
+        if (quizForm) {
+            quizForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const selectedOption = document.querySelector('input[name="quiz-answer"]:checked');
+                if (!selectedOption) {
+                    alert('Please select an answer');
+                    return;
+                }
+                
+                const isCorrect = selectedOption.value === quiz.answer;
+                
+                // Show result
+                let resultHTML = `
+                    <div class="alert ${isCorrect ? 'alert-success' : 'alert-danger'}">
+                        <h5>${isCorrect ? '✅ Correct!' : '❌ Incorrect'}</h5>
+                        ${isCorrect ? 
+                            'Great job! You answered correctly.' : 
+                            `The correct answer is: <strong>${quiz.answer}</strong>`}
+                    </div>
+                `;
+                
+                quizContainer.innerHTML = resultHTML;
+                
+                // If correct, update progress
+                if (isCorrect) {
+                    updateModuleProgress(currentModule.id);
+                }
+            });
+        }
+    }
+    
+    // Update module progress
+    function updateModuleProgress(moduleId) {
+        // Here you would typically make an AJAX call to update the progress on the server
+        // For now, we'll just update the UI
+        const progressBar = document.getElementById('course-progress-bar');
+        if (progressBar) {
+            const currentProgress = parseInt(progressBar.style.width || '0');
+            const newProgress = Math.min(currentProgress + 10, 100); // Increment by 10%
+            progressBar.style.width = `${newProgress}%`;
+            progressBar.setAttribute('aria-valuenow', newProgress);
+            progressBar.textContent = `${newProgress}%`;
+        }
+    }
+    
+    // Set initial progress
+    const progressBar = document.getElementById('course-progress-bar');
+    if (progressBar) {
+        const progress = progressBar.getAttribute('data-progress');
+        progressBar.style.width = `${progress}%`;
+    }
+
+    // Load first module by default
+    if (moduleItems.length > 0) {
+        moduleItems[0].click();
+    }
+});
+</script>
+{% endblock %}

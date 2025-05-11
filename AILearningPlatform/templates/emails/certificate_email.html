@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Certificate - Learnify</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4e73df;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+        .verification-code {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f8f9fc;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="color: #4e73df; margin: 0;">Learnify</h1>
+    </div>
+    
+    <div class="content">
+        <h2>Congratulations, {{ user.username }}!</h2>
+        <p>You have successfully completed the course <strong>{{ course.title }}</strong> with a score of <strong>{{ "%.2f"|format(certificate.score) }}%</strong>.</p>
+        
+        <p>Your certificate is attached to this email. You can also download it by clicking the button below:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ verification_url }}" class="button">View Certificate</a>
+        </div>
+        
+        <p>You can verify your certificate at any time using this verification code:</p>
+        <div class="verification-code">{{ certificate.verification_code }}</div>
+        
+        <p>Or by visiting our <a href="{{ url_for('verify_certificate', _external=True) }}">certificate verification page</a>.</p>
+        
+        <p>Thank you for learning with us!</p>
+        
+        <p>Best regards,<br>The Learnify Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2023 Learnify. All rights reserved.</p>
+        <p>This email was sent to {{ user.email }} because you completed a course on Learnify.</p>
+        <p>Learnify, 123 Education St, Learning City, 10001</p>
+    </div>
+</body>
+</html>

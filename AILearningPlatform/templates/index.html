@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Transform Your Learning with AI</h1>
+        <p class="lead mb-5">Personalized courses, interactive features, and AI-powered learning assistance to help you succeed.</p>
+        <div>
+            <a href="/courses" class="btn btn-primary btn-lg me-3">Explore Courses</a>
+            <a href="/register" class="btn btn-outline-light btn-lg">Get Started</a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose Learnify?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3">
+                            <i class="fas fa-robot fa-2x p-3"></i>
+                        </div>
+                        <h3 class="card-title">AI-Powered Learning</h3>
+                        <p class="card-text">Get personalized assistance from our AI chatbot to resolve your doubts instantly.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-info bg-gradient text-white rounded-circle mb-3">
+                            <i class="fas fa-trophy fa-2x p-3"></i>
+                        </div>
+                        <h3 class="card-title">Interactive Leaderboard</h3>
+                        <p class="card-text">Compete with other learners, earn badges, and maintain learning streaks.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-success bg-gradient text-white rounded-circle mb-3">
+                            <i class="fas fa-chart-line fa-2x p-3"></i>
+                        </div>
+                        <h3 class="card-title">Progress Tracking</h3>
+                        <p class="card-text">Monitor your learning progress with detailed analytics and visualizations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section -->
+<section class="py-5 bg-dark">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Featured Courses</h2>
+            <a href="/courses" class="btn btn-outline-primary">View All</a>
+        </div>
+        <div class="row g-4">
+            {% for course in courses %}
+            <div class="col-md-4">
+                <div class="card h-100 course-card">
+                    <img src="{{ url_for('static', filename=course.image_url) }}" class="card-img-top course-image" alt="{{ course.title }}">
+                    <div class="card-body">
+                        <span class="badge bg-{{ 'info' if course.level == 'Beginner' else 'warning' if course.level == 'Intermediate' else 'danger' }}">{{ course.level }}</span>
+                        <h5 class="card-title mt-2">{{ course.title }}</h5>
+                        <p class="card-text">{{ course.description }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ course.duration }}</small>
+                        <a href="/course/{{ course.id }}" class="btn btn-sm btn-primary">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">What Our Students Say</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning me-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>5.0</span>
+                        </div>
+                        <p class="card-text">"The AI chatbot helped me understand complex topics that I was struggling with. It's like having a personal tutor available 24/7!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-primary rounded-circle text-center p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Sarah Johnson</h6>
+                                <small class="text-muted">Data Science Student</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning me-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <span>4.5</span>
+                        </div>
+                        <p class="card-text">"The gamification elements like badges and streaks kept me motivated to learn consistently. I've maintained a 30-day streak so far!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-primary rounded-circle text-center p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Michael Chen</h6>
+                                <small class="text-muted">Python Developer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0 shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <div class="text-warning me-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>5.0</span>
+                        </div>
+                        <p class="card-text">"The progress tracking features helped me identify areas where I needed to improve. The visualizations made it easy to see my learning journey."</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-primary rounded-circle text-center p-2 me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Emily Rodriguez</h6>
+                                <small class="text-muted">Web Development Student</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5 bg-primary text-white text-center">
+    <div class="container">
+        <h2 class="mb-4">Ready to Start Your Learning Journey?</h2>
+        <p class="lead mb-4">Join thousands of students who are already leveraging AI to enhance their learning experience.</p>
+        <a href="/register" class="btn btn-light btn-lg">Sign Up Now</a>
+    </div>
+</section>
+{% endblock %}

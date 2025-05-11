@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}Quiz Result - {{ course.title }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header {% if passed %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-{% if passed %}check{% else %}times{% endif %}-circle"></i>
+                        Quiz Result - {{ course.title }}
+                    </h2>
+                </div>
+                <div class="card-body text-center">
+                    {% if passed %}
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+                            <h3 class="mt-3">Congratulations!</h3>
+                            <p class="lead">You have passed the quiz with a score of {{ "%.2f"|format(score) }}%</p>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <h4><i class="fas fa-trophy"></i> Course Completed!</h4>
+                            <p>You've successfully completed the course. You can now download your certificate.</p>
+                            <a href="{{ url_for('routes.download_certificate', course_id=course.id) }}" class="btn btn-success mt-2" id="downloadBtn">
+                                <i class="fas fa-download"></i> Download Certificate
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="mb-4">
+                            <i class="fas fa-times-circle text-danger" style="font-size: 5rem;"></i>
+                            <h3 class="mt-3">Quiz Not Passed</h3>
+                            <p class="lead">Your score: {{ "%.2f"|format(score) }}% (Minimum passing score: 70%)</p>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h4><i class="fas fa-redo"></i> Try Again</h4>
+                            <p>You need to score at least 70% to pass. You can retake the quiz to improve your score.</p>
+                            <a href="{{ url_for('routes.take_quiz', course_id=course.id) }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-redo"></i> Retake Quiz
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="progress mt-4 mb-3" style="height: 30px;">
+                        <div id="progressBar" class="progress-bar {{ 'bg-success' if passed else 'bg-danger' }}" 
+                             role="progressbar" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100"
+                             data-width="{{ score|int }}">
+                            {{ "%.2f"|format(score) }}%
+                        </div>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const progressBar = document.getElementById('progressBar');
+                            const width = progressBar.getAttribute('data-width');
+                            progressBar.style.width = width + '%';
+                            progressBar.setAttribute('aria-valuenow', width);
+                        });
+                    </script>
+                    
+                    <p class="text-muted">
+                        You answered {{ correct_answers }} out of {{ total_questions }} questions correctly.
+                    </p>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('routes.course_details', course_id=course.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Course
+                        </a>
+                        <a href="{{ url_for('routes.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if passed %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    downloadBtn.addEventListener('click', function(e) {
+        // Show loading state
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Certificate...';
+        
+        // The download will be handled by the browser
+        // Reset the button after a short delay in case of error
+        setTimeout(() => {
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = originalText;
+        }, 5000);
+    });
+});
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "auth/base_auth.html" %}
+
+{% block title %}Login - Learnify{% endblock %}
+
+{% block content %}
+    <h1 class="auth-title text-center">Welcome Back!</h1>
+    <p class="auth-subtitle">Sign in to continue to Learnify</p>
+    
+    <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+        
+        <div class="mb-3">
+            <div class="form-floating">
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                <label for="email">Email address</label>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-floating">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                <label for="password">Password</label>
+            </div>
+            <div class="text-end mt-2">
+                <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none">
+                    Forgot password?
+                </a>
+            </div>
+        </div>
+        
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="remember" name="remember">
+            <label class="form-check-label" for="remember">
+                Remember me
+            </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+            Sign In
+        </button>
+        
+        <div class="text-center">
+            <p class="mb-0">Don't have an account? 
+                <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                    Sign up
+                </a>
+            </p>
+        </div>
+    </form>
+{% endblock %}

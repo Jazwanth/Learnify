@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - Courses{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Explore Our Courses</h1>
+            
+            <!-- Course Categories -->
+            <div class="mb-4">
+                <div class="btn-group" role="group" aria-label="Course categories">
+                    <button type="button" class="btn btn-outline-primary active" data-category="all">All</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="Beginner">Beginner</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="Intermediate">Intermediate</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="Advanced">Advanced</button>
+                </div>
+            </div>
+            
+            <!-- Search bar -->
+            <div class="mb-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="course-search" placeholder="Search for courses...">
+                </div>
+            </div>
+            
+            <!-- Courses Grid -->
+            <div class="row g-4" id="courses-container">
+                {% for course in courses %}
+                <div class="col-md-4 course-item" data-level="{{ course.level }}">
+                    <div class="card h-100 course-card">
+                        <img src="{{ url_for('static', filename=course.image_url) }}" class="card-img-top course-image" alt="{{ course.title }}">
+                        <div class="card-body">
+                            <span class="badge bg-{{ 'info' if course.level == 'Beginner' else 'warning' if course.level == 'Intermediate' else 'danger' }}">{{ course.level }}</span>
+                            <h5 class="card-title mt-2">{{ course.title }}</h5>
+                            <p class="card-text">{{ course.description }}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-user-tie me-1"></i> {{ course.instructor }}
+                                </small>
+                            </p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i> {{ course.duration }}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                            {% if session.username and course.enrolled is defined and course.enrolled %}
+                                <span class="badge bg-success"><i class="fas fa-check me-1"></i> Enrolled</span>
+                                <a href="/course/{{ course.id }}" class="btn btn-primary">Continue</a>
+                            {% else %}
+                                <span>&nbsp;</span>
+                                <a href="/course/{{ course.id }}" class="btn btn-primary">View Details</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- No results message -->
+            <div id="no-results" class="text-center py-5 d-none">
+                <i class="fas fa-search text-muted fa-3x mb-3"></i>
+                <h4>No courses found</h4>
+                <p class="text-muted">Try adjusting your search or filter criteria</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const categoryButtons = document.querySelectorAll('.btn-group button');
+        const courseItems = document.querySelectorAll('.course-item');
+        const noResults = document.getElementById('no-results');
+        const searchInput = document.getElementById('course-search');
+        
+        function filterCourses() {
+            const activeCategory = document.querySelector('.btn-group button.active').getAttribute('data-category');
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+            
+            courseItems.forEach(item => {
+                const level = item.getAttribute('data-level');
+                const title = item.querySelector('.card-title').textContent.toLowerCase();
+                const description = item.querySelector('.card-text').textContent.toLowerCase();
+                
+                const categoryMatch = activeCategory === 'all' || level === activeCategory;
+                const searchMatch = title.includes(searchTerm) || description.includes(searchTerm);
+                
+                if (categoryMatch && searchMatch) {
+                    item.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    item.classList.add('d-none');
+                }
+            });
+            
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                noResults.classList.remove('d-none');
+            } else {
+                noResults.classList.add('d-none');
+            }
+        }
+        
+        // Category button click
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                filterCourses();
+            });
+        });
+        
+        // Search input
+        searchInput.addEventListener('keyup', filterCourses);
+    });
+</script>
+{% endblock %}

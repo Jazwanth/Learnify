@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Certificate - Learnify{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">Certificate Verification</h2>
+                </div>
+                <div class="card-body">
+                    {% if certificate %}
+                        <div class="text-center mb-4">
+                            <i class="fas fa-certificate fa-5x text-success mb-3"></i>
+                            <h3>Certificate Verified Successfully</h3>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4 class="card-title">{{ certificate.course.title }}</h4>
+                                <p class="card-text">
+                                    <strong>Issued to:</strong> {{ certificate.user.username }}<br>
+                                    <strong>Score:</strong> {{ "%.2f"|format(certificate.score) }}%<br>
+                                    <strong>Issued on:</strong> {{ certificate.issue_date.strftime('%B %d, %Y') }}
+                                </p>
+                                <p class="text-muted">
+                                    <small>Verification Code: {{ certificate.verification_code }}</small>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="{{ url_for('static', filename=certificate.certificate_url) }}" 
+                               class="btn btn-primary" download>
+                                <i class="fas fa-download me-2"></i>Download Certificate
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <i class="fas fa-search fa-5x text-muted mb-4"></i>
+                            <h3>Verify a Certificate</h3>
+                            <p class="text-muted">Enter the verification code to verify a certificate</p>
+                            
+                            <form method="GET" class="mt-4">
+                                <div class="input-group mb-3">
+                                    <input type="text" name="code" class="form-control form-control-lg" 
+                                           placeholder="Enter verification code" required>
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-check me-1"></i> Verify
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            {% if error %}
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>Powered by Learnify - Secure Certificate Verification</small>
+                </div>
+            </div>
+            
+            {% if certificate %}
+            <div class="text-center mt-4">
+                <a href="{{ url_for('verify_certificate') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i> Verify Another Certificate
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-focus the verification code input
+    document.addEventListener('DOMContentLoaded', function() {
+        const codeInput = document.querySelector('input[name="code"]');
+        if (codeInput) {
+            codeInput.focus();
+        }
+    });
+</script>
+{% endblock %}

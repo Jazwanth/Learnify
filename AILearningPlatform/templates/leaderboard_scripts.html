@@ -1,0 +1,180 @@
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const leaderboardBody = document.getElementById('leaderboard-body');
+    const lastUpdated = document.getElementById('last-updated');
+    
+    // Function to format timestamp
+    function formatTime(date) {
+        return new Date(date).toLocaleTimeString();
+    }
+    
+    // Function to update the leaderboard
+    function updateLeaderboard(data) {
+        if (data.error) {
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger">
+                        Error loading leaderboard: ${data.error}
+                    </td>
+                </tr>`;
+            return;
+        }
+        
+        const leaderboard = data.leaderboard || [];
+        
+        if (leaderboard.length === 0) {
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center">
+                        No leaderboard data available
+                    </td>
+                </tr>`;
+            return;
+        }
+        
+        // Update last updated time
+        lastUpdated.textContent = `Updated: ${formatTime(data.updated_at)}`;
+        
+        // Clear existing content
+        leaderboardBody.innerHTML = '';
+        
+        // Add leaderboard rows
+        leaderboard.forEach(entry => {
+            const isCurrentUser = entry.is_current_user || false;
+            const row = document.createElement('tr');
+            if (isCurrentUser) {
+                row.classList.add('table-primary');
+            }
+            
+            // Rank with medal for top 3
+            let rankHtml = '';
+            if (entry.rank === 1) {
+                rankHtml = '<span class="badge-rank gold"><i class="fas fa-trophy"></i></span>';
+            } else if (entry.rank === 2) {
+                rankHtml = '<span class="badge-rank silver"><i class="fas fa-medal"></i></span>';
+            } else if (entry.rank === 3) {
+                rankHtml = '<span class="badge-rank bronze"><i class="fas fa-medal"></i></span>';
+            } else {
+                rankHtml = `<span class="badge-rank">${entry.rank}</span>`;
+            }
+            
+            // User info with avatar
+            const userHtml = `
+                <div class="d-flex align-items-center">
+                    <img src="${entry.avatar || "{{ url_for('static', filename='images/default-avatar.png') }}"}" 
+                         alt="${entry.username}" 
+                         class="user-avatar"
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+                    <div>
+                        <div class="fw-bold">${entry.username}</div>
+                        ${isCurrentUser ? '<span class="badge bg-primary">You</span>' : ''}
+                    </div>
+                </div>`;
+            
+            // Progress bar
+            const progressPercentage = entry.progress_percentage || 0;
+            const coursesCompleted = entry.courses_completed || 0;
+            const totalCourses = entry.total_courses || 1; // Avoid division by zero
+            
+            const progressHtml = `
+                <div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>${progressPercentage}% Complete</small>
+                        <small>${coursesCompleted}/${totalCourses} Courses</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" 
+                             role="progressbar" 
+                             style="width: ${progressPercentage}%"
+                             aria-valuenow="${progressPercentage}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>`;
+            
+            // XP with icon
+            const xpHtml = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-star text-warning me-2"></i>
+                    <span>${entry.xp || 0} XP</span>
+                </div>`;
+            
+            row.innerHTML = `
+                <td class="align-middle">${rankHtml}</td>
+                <td class="align-middle">${userHtml}</td>
+                <td class="align-middle">${progressHtml}</td>
+                <td class="align-middle">${xpHtml}</td>`;
+                
+            leaderboardBody.appendChild(row);
+            
+            // Update user stats if this is the current user
+            if (isCurrentUser) {
+                document.getElementById('user-course-progress').style.width = `${progressPercentage}%`;
+                document.getElementById('progress-text').textContent = 
+                    `${progressPercentage}% Complete (${coursesCompleted}/${totalCourses} Courses)`;
+                document.getElementById('user-xp').textContent = `${entry.xp || 0} XP`;
+                
+                // This would come from your backend, using a placeholder for now
+                document.getElementById('user-streak').textContent = 
+                    `${entry.streak_days || 0} day${entry.streak_days !== 1 ? 's' : ''}`;
+            }
+        });
+    }
+    
+    // Function to fetch leaderboard data
+    function fetchLeaderboard() {
+        fetch('/leaderboard', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            updateLeaderboard(data);
+        })
+        .catch(error => {
+            console.error('Error fetching leaderboard:', error);
+            leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger">
+                        Error loading leaderboard. Please try again later.
+                    </td>
+                </tr>`;
+        });
+    }
+    
+    // Initial fetch
+    fetchLeaderboard();
+    
+    // Set up periodic refresh (every 30 seconds)
+    setInterval(fetchLeaderboard, 30000);
+    
+    // Also set up SSE for real-time updates if available
+    if (typeof(EventSource) !== 'undefined') {
+        const eventSource = new EventSource('/stream/leaderboard');
+        
+        eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                updateLeaderboard(data);
+            } catch (e) {
+                console.error('Error parsing SSE data:', e);
+            }
+        };
+        
+        eventSource.onerror = function(error) {
+            console.error('SSE error:', error);
+            // Don't show error to user, we'll keep using the periodic fetch
+        };
+    }
+});
+</script>
+{% endblock %}

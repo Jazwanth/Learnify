@@ -1,0 +1,304 @@
+{% extends "layout.html" %}
+
+{% block title %}Learnify - Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="card bg-dark border-0 shadow mb-4 text-center">
+                <div class="card-body">
+                    <img src="{{ url_for('static', filename='profile_pics/' + user.profile_image_url if user.profile_image_url else url_for('static', filename='profile_pics/default_profile.png')) }}" 
+                         alt="Profile Picture" 
+                         class="img-fluid rounded-circle mb-3" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                    
+                    <h4 class="card-title mb-1">{{ user.username }}</h4>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    <p class="text-muted small">Joined: {{ user.joined_date.strftime('%B %Y') if user.joined_date else 'N/A' }}</p>
+
+                    <!-- Profile Picture Upload Form -->
+                    <hr class="border-secondary">
+                    <h6 class="text-start text-info mb-2">Update Profile Picture</h6>
+                    <form method="POST" action="{{ url_for('routes.upload_profile_picture') }}" enctype="multipart/form-data">
+                        {{ csrf_token() }}
+                        <div class="mb-3">
+                            <input type="file" class="form-control form-control-sm bg-secondary text-white border-secondary" name="profile_picture" accept="image/png, image/jpeg, image/gif" required>
+                        </div>
+                        <button type="submit" class="btn btn-info btn-sm w-100"><i class="fas fa-upload me-2"></i>Upload New Picture</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Learning Stats -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0">Learning Stats</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-book text-primary me-2"></i> Courses Enrolled
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ enrolled_courses|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-graduation-cap text-success me-2"></i> Courses Completed
+                            </div>
+                            <span class="badge bg-success rounded-pill">{{ completed_courses|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-question-circle text-info me-2"></i> Quizzes Taken
+                            </div>
+                            <span class="badge bg-info rounded-pill">{{ quizzes_taken|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-medal text-warning me-2"></i> Achievements Earned
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill">{{ achievements|length }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Edit Profile & Preferences Form -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0"><i class="fas fa-edit text-info me-2"></i>Edit Profile & Preferences</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('routes.profile') }}">
+                        {{ csrf_token() }} <!-- If you're using Flask-WTF or similar for CSRF protection -->
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control bg-secondary text-white border-secondary" id="username" name="username" value="{{ user.username }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control bg-secondary text-white border-secondary" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="receive_email_notifications" name="receive_email_notifications" {% if user.receive_email_notifications %}checked{% endif %}>
+                            <label class="form-check-label" for="receive_email_notifications">Receive Email Notifications</label>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="receive_platform_notifications" name="receive_platform_notifications" {% if user.receive_platform_notifications %}checked{% endif %}>
+                            <label class="form-check-label" for="receive_platform_notifications">Receive Platform Notifications</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Change Password Form -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h4 class="mb-0"><i class="fas fa-key text-warning me-2"></i>Change Password</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('routes.change_password') }}">
+                        {{ csrf_token() }}
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control bg-secondary text-white border-secondary" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control bg-secondary text-white border-secondary" id="new_password" name="new_password" required minlength="8">
+                            <small class="form-text text-muted">Minimum 8 characters.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control bg-secondary text-white border-secondary" id="confirm_new_password" name="confirm_new_password" required minlength="8">
+                        </div>
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-lock me-2"></i>Update Password</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- Achievements Tab -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h3 class="mb-0"><i class="fas fa-medal text-warning me-2"></i> Achievements</h3>
+                </div>
+                <div class="card-body">
+                    {% if achievements %}
+                        <div class="row g-4">
+                            {% for achievement in achievements %}
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="card bg-dark border-0 h-100">
+                                        <div class="card-body text-center">
+                                            <div class="achievement-badge mx-auto mb-3 {{ 'gold' if loop.index <= 2 else 'silver' if loop.index <= 4 else 'bronze' }}" style="width: 100px; height: 100px;">
+                                                {% if achievement.id.startswith('streak') %}
+                                                    <svg width="40" height="40">
+                                                        <use xlink:href="#badge-{{ 'weekly-warrior' if achievement.id == 'streak_7' else 'monthly-master' }}"/>
+                                                    </svg>
+                                                {% elif achievement.id.startswith('quiz') %}
+                                                    <svg width="40" height="40">
+                                                        <use xlink:href="#badge-perfect-score"/>
+                                                    </svg>
+                                                {% elif achievement.id.startswith('course_') %}
+                                                    <svg width="40" height="40">
+                                                        <use xlink:href="#badge-course-graduate"/>
+                                                    </svg>
+                                                {% elif achievement.id == 'complete_5' %}
+                                                    <svg width="40" height="40">
+                                                        <use xlink:href="#badge-learning-enthusiast"/>
+                                                    </svg>
+                                                {% elif achievement.id == 'first_course' %}
+                                                    <svg width="40" height="40">
+                                                        <use xlink:href="#badge-first-steps"/>
+                                                    </svg>
+                                                {% else %}
+                                                    <i class="fas fa-medal fa-2x"></i>
+                                                {% endif %}
+                                            </div>
+                                            <h5>{{ achievement.title }}</h5>
+                                            <p class="text-muted small">Earned on {{ achievement.earned_at.split()[0] }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-medal text-muted fa-3x mb-3"></i>
+                            <h4>No achievements yet</h4>
+                            <p class="text-muted">Complete courses, take quizzes, and maintain streaks to earn badges!</p>
+                            {% if enrolled_courses|default(0) == 0 %}
+                                <a href="/courses" class="btn btn-primary">Browse Courses</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Available Achievements -->
+            <div class="card bg-dark border-0 shadow mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h3 class="mb-0"><i class="fas fa-trophy text-warning me-2"></i> Achievement Goals</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-first-steps"/>
+                                    </svg>
+                                    <h5>First Steps</h5>
+                                    <p class="small text-muted">Enroll in your first course</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'first_course')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-course-graduate"/>
+                                    </svg>
+                                    <h5>Course Graduate</h5>
+                                    <p class="small text-muted">Complete your first course</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'complete_1')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-perfect-score"/>
+                                    </svg>
+                                    <h5>Perfect Score</h5>
+                                    <p class="small text-muted">Ace a quiz with 100% score</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'quiz_perfect')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-weekly-warrior"/>
+                                    </svg>
+                                    <h5>Weekly Warrior</h5>
+                                    <p class="small text-muted">Maintain a 7-day learning streak</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'streak_7')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-monthly-master"/>
+                                    </svg>
+                                    <h5>Monthly Master</h5>
+                                    <p class="small text-muted">Maintain a 30-day learning streak</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'streak_30')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="card bg-dark h-100">
+                                <div class="card-body text-center">
+                                    <svg width="60" height="60" class="mb-3">
+                                        <use xlink:href="#badge-learning-enthusiast"/>
+                                    </svg>
+                                    <h5>Learning Enthusiast</h5>
+                                    <p class="small text-muted">Complete 5 courses</p>
+                                    {% set has_badge = achievements|selectattr('id', 'eq', 'complete_5')|list %}
+                                    {% if has_badge %}
+                                        <span class="badge bg-success">Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Not Earned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
